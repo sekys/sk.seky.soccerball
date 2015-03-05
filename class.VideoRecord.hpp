@@ -3,6 +3,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 #include "entities.hpp"
+#include <queue>
 
 using namespace cv;
 using namespace std;
@@ -12,8 +13,8 @@ class VideoRecord {
 private:
 	// http://docs.opencv.org/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture
 	VideoCapture* cap;
-	Image frame; /**< Aktualna snimak z maery, tato snimka sa moze preskocit, nemusi sa spracovat */
 	string filename;
+	queue<Image*> buffer;
 
 	void load() {
 		if(filename.empty()) {
@@ -25,7 +26,6 @@ private:
 		if(!cap->isOpened()) {
 			throw runtime_error("[ModulKamera] I cannot open device / file.");
 		}
-		frame.pos_msec = 0;
 	}
 
 	void unload() {
@@ -55,13 +55,35 @@ public:
 	}
 
 	// Ziskaj aktualnu snimku z kamery
-	Image readNext() {
-		if(!cap->read(frame.data)) {
+	Image* readNext() {
+		Image* frame = new Image();
+		if(!cap->read(frame->data)) {
 			throw EndOfStream();
 		}
-		frame.pos_msec = cap->get(CV_CAP_PROP_POS_MSEC);
+		frame->pos_msec = cap->get(CV_CAP_PROP_POS_MSEC);
 		return frame;
-		// CV_CAP_PROP_FRAME_COUNT 670 snimkov
+	}
+
+	Image* bufferNext() {
+		Image* frame = new Image();
+		if(buffer.empty()) {
+			throw EndOfStream();
+		}
+		frame = buffer.front();
+		buffer.pop();
+		frame->pos_msec = cap->get(CV_CAP_PROP_POS_MSEC);
+		return frame;
+	}
+
+	void readAll() {
+		try {
+			for(int i=0; i < 300; i++) {
+				Image* frame = this->readNext();
+				buffer.push(frame);
+			}
+		} catch(VideoRecord::EndOfStream stream) {
+
+		}
 	}
 
 	void doReset() {
