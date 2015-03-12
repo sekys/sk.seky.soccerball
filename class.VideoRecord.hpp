@@ -60,7 +60,7 @@ public:
 		if(!cap->read(frame->data)) {
 			throw EndOfStream();
 		}
-		frame->pos_msec = cap->get(CV_CAP_PROP_POS_MSEC);
+		frame->pos_msec = cap->get(CV_CAP_PROP_POS_MSEC) / 40;
 		return frame;
 	}
 

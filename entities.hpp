@@ -1,6 +1,7 @@
 #pragma once
 #include <opencv2/core/core.hpp>
 #include "opencv2/opencv.hpp"
+#include <queue> 
 
 #define SAFE_DELETE(a) if( (a) != NULL ) delete (a); (a) = NULL;
 
@@ -43,13 +44,36 @@ public:
 * Trieda reprezentuje objekt detekovany na obrazovke videa.
 * Dany objekt odkazuje na svetovy objekt
 */
-class DetekovanyObjekt {
+class FrameObject {
 public:
-	RotatedRect boundary; /**< ojekt ma velkost rectange, to je aj jeho pozicia na obrazku */
+	RotatedRect boundary;
+	int frame;
 
-	friend ostream& operator<< (ostream& out, DetekovanyObjekt& object) {
-		out << "DetekovanyObjekt(";
-		out << "objekt: " << object.boundary << ",";
+	friend ostream& operator<< (ostream& out, FrameObject& object) {
+		out << "FrameObject(";
+		out << "boundary: " << object.boundary << ",";
+		out << "frame: " << object.frame << ",";
+		out << ")";
+		return out;
+	}
+};
+
+class SoccerObject {
+public:
+	UINT id; // generovane ID
+	queue<FrameObject> positions; // TODO: moze byt obmedzeny na 20snimkov a info budeme ukladat inde
+	// int speed; // jeho posledne zachytena rychlost aby smem sledoval ikde asi bude
+	bool visible; // objekt s adalej uz enbude zobrazovat
+	UINT team;
+
+	int distance() {
+		// Vypocitaj vzdialenost, ktoru presiel z historie
+	}
+
+	friend ostream& operator<< (ostream& out, SoccerObject& object) {
+		out << "SoccerObject(";
+		out << "id: " << object.id << ",";
+		//out << "speed: " << object.speed << ",";
 		out << ")";
 		return out;
 	}

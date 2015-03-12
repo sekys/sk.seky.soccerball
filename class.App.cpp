@@ -22,9 +22,9 @@ void App::MainCycle() {
 			double deltaTime = time - Time::getInstance().GetAbsolute();;
 			if(refreshApp) {
 				// nemozme priamo volat UpdateWindow ale toto mozme ..je take iste
-				Refresh();
+				//Refresh();
 			}
-			LimitFPS(deltaTime);
+			//LimitFPS(deltaTime);
 		}
 	}
 }
