@@ -19,8 +19,10 @@ private:
 	VideoRecord* m_record;
 	Ptr<BackgroundSubtractor> m_pMOG2; //MOG2 Background subtractor
 	vector<SoccerObject> m_objects;
+	Image* m_actual;
+	int m_roi_index;
 
-
+	void histogram(Mat src);
 	void spracujJedenSnimok(Image* image); 	// Metoda na spracovanie snimku
 	void nacitajDalsiuSnimku(); 	// Metoda pre ziskanie snimku
 	int intersection(vector<Point>& contour, Rect& rec);

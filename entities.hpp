@@ -4,6 +4,7 @@
 #include <queue> 
 
 #define SAFE_DELETE(a) if( (a) != NULL ) delete (a); (a) = NULL;
+#define SAFE_RELEASE(p) if ( (p) != NULL  ) (p)->release(); (p) = NULL;
 
 using namespace cv;
 using namespace std;
@@ -37,6 +38,15 @@ public:
 	friend ostream& operator<< (ostream& out, Image& object) {
 		out << "Image(pos_msec:" << object.pos_msec << ")";
 		return out;
+	}
+	Image* clone() {
+		Image* temp = new Image();
+		temp->pos_msec = this->pos_msec;
+		temp->data = this->data.clone();
+		return temp;
+	}
+	void release() {
+		data.release();
 	}
 };
 
