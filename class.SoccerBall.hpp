@@ -18,14 +18,16 @@ private:
 	bool m_pause;
 	VideoRecord* m_record;
 	Ptr<BackgroundSubtractor> m_pMOG2; //MOG2 Background subtractor
-	vector<SoccerObject> m_objects;
+	vector<SoccerObject> m_realObjects;
 	Image* m_actual;
 	int m_roi_index;
 
-	void histogram(Mat src);
 	void spracujJedenSnimok(Image* image); 	// Metoda na spracovanie snimku
 	void nacitajDalsiuSnimku(); 	// Metoda pre ziskanie snimku
-	int intersection(vector<Point>& contour, Rect& rec);
+	void findObjects(Mat& image, Mat& fbMask, vector<RotatedRect>& objects);
+	void buildSoccerObjects(vector<RotatedRect>& imageObjects, vector<SoccerObject>& realObjects);
+	void drawROI(Mat& image, vector<RotatedRect>& objects);
+	int identifySoccerObjects(RotatedRect& object);
 
 protected:
 	// Inicializacia Carlosu

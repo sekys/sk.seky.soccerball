@@ -1,4 +1,6 @@
 #include "class.SoccerBall.hpp"
+#include <opencv2/imgproc/imgproc.hpp>
+#include "util.h"
 
 SoccerBall::SoccerBall() : m_lockFPS(60), m_winSize(640, 480) 
 {
@@ -16,7 +18,7 @@ SoccerBall::~SoccerBall() {
 	SAFE_DELETE(m_record);
 	SAFE_DELETE(m_pMOG2);
 	SAFE_RELEASE(m_actual);
-	m_objects.clear();
+	m_realObjects.clear();
 	if(log != NULL) log->debug("Ending SoccerBall");
 }
 
@@ -72,14 +74,86 @@ void SoccerBall::nacitajDalsiuSnimku() {
 
 
 void SoccerBall::spracujJedenSnimok(Image* in) {
-	// Uprav vstup podla potreby
-	Mat out, image, fgMaskMOG, ROI;
+	// Predspracuj vstup podla potreby, vypocitaj fgMasku
+	Mat image, fgMaskMOG;
 	Size velkostVstupu = m_winSize; //Size(1920, 1080);
-	out = in->data.clone();
-	resize(out, out, velkostVstupu);
-	m_pMOG2->operator()(out, fgMaskMOG);
-	ROI = Mat(out);
+	image = in->data.clone();
+	resize(image, image, velkostVstupu);
+	m_pMOG2->operator()(image, fgMaskMOG);
 
+	// Najdi objekty
+	vector<RotatedRect> objects;
+	findObjects(image, fgMaskMOG, objects);
+	drawROI(image, objects);
+
+	// Vykresli detekovane oblasti
+	for( UINT i = 0; i < objects.size(); i++ ) { 
+		ellipse(image, objects[i], Scalar(0,0,255), 1);
+	}
+
+	resize(image, image, m_winSize);
+	resize(fgMaskMOG, fgMaskMOG, m_winSize);
+	imshow("Vystup", image);
+	imshow("Maska", fgMaskMOG);
+}
+
+void SoccerBall::buildSoccerObjects(vector<RotatedRect>& imageObjects, vector<SoccerObject>& realObjects) {
+	const float VOLUME_BANNER = 0.8f;
+
+	for( UINT a = 0; a < realObjects.size(); a++ ) { 
+		for( UINT b = 0; b < imageObjects.size(); b++ ) { 
+			// imageObjects[i]
+			// realObjects.push_back(rec);
+		}
+	}
+}
+
+int SoccerBall::identifySoccerObjects(RotatedRect& rect) {
+	const double MAX_DISTANCE = 100;
+
+	for( UINT a = 0; a < m_realObjects.size(); a++ ) { 
+		FrameObject& frame = m_realObjects[a].positions.back();
+		double distance = norm(frame.boundary.center - rect.center);
+		if(distance > MAX_DISTANCE) {
+			continue; // objekty su priliz vzdialene
+		}
+		int intersection = rotatedRectangleIntersection(rect, frame.boundary, Mat()); 
+		if(intersection == 0) {
+			continue; // objekty sa nedotykaju, nevieme zistit ci ide o ten isty objekt
+		}
+	}
+
+	return 0;
+}
+
+
+// Find ROI or select main image
+void SoccerBall::drawROI(Mat& image, vector<RotatedRect>& objects) {
+	Mat ROI;
+	UINT size = objects.size();
+	if(size > 0) {
+		UINT index =  m_roi_index % size;
+		Rect rec = objects[index].boundingRect();
+		rec = rec & Rect(0, 0, image.cols, image.rows);
+		ROI = Mat(image, rec).clone(); 
+		
+		// Vykresli pre obraz cluster a histogram
+		/*
+		Mat labels = computeClusters(ROI);
+		resize(labels, labels, m_winSize);
+		imshow("result", labels);	
+		Mat histImage = computeHistogram(ROI); 
+		imshow("Histogram", histImage );
+		*/
+	} else {
+		ROI = Mat(image);
+	}
+	resize(ROI, ROI, m_winSize);
+	imshow("Vybrana sekcia", ROI);
+}
+
+// Find objects
+void SoccerBall::findObjects(Mat& image, Mat& fgMaskMOG, vector<RotatedRect>& objects) {
 	// Vyber kontury
 	vector<vector<Point>> contours;
 	erode(fgMaskMOG, fgMaskMOG, Mat(), Point(-1,-1), 1);
@@ -94,156 +168,26 @@ void SoccerBall::spracujJedenSnimok(Image* in) {
 	const float VOLUME_BANNER = 0.8f;
 	const bool debugDraw = false;
 
-	vector<RotatedRect> ellipses;
 	for( UINT i = 0; i < contours.size(); i++ ) { 
 		vector<Point> kontura = contours[i];
 		if( kontura.size() < MIN_PIXELS_IN_CONTOUR) { 
-			if(debugDraw) drawContours( out, contours, i, Scalar(255,0,0), 1);
+			if(debugDraw) drawContours( image, contours, i, Scalar(255,0,0), 1);
 			continue;
 		}
 		RotatedRect rec = fitEllipse( Mat(kontura) );
 		float takeSpace = rec.size.area();
 		if(takeSpace < MIN_AREA || takeSpace > MAX_AREA) {
-			if(debugDraw) drawContours( out, contours, i, Scalar(255,0,0), 1);
+			if(debugDraw) drawContours( image, contours, i, Scalar(255,0,0), 1);
 			continue;
 		}
 
-		int podobnost = intersection(kontura, BANNER_AREA);
-		if(podobnost > ((int) kontura.size() * VOLUME_BANNER)) {
-			if(debugDraw) drawContours( out, contours, i, Scalar(0,255,0), 1);
+		if(isRelativeIntersection(kontura, BANNER_AREA, VOLUME_BANNER)) {
+			if(debugDraw) drawContours( image, contours, i, Scalar(0,255,0), 1);
 			continue;
 		}
 
-		ellipses.push_back(rec);
+		objects.push_back(rec);
 	}
-
-	// Spracuvaj detekovane oblasti
-	UINT elSize = ellipses.size();
-	for( UINT i = 0; i < elSize; i++ ) { 
-		// Select ROI
-		if(i == m_roi_index % elSize) {
-			Rect rec = ellipses[i].boundingRect();
-			rec = rec & Rect(0, 0, out.cols, out.rows);
-			ROI = Mat(out, rec).clone(); 
-			histogram(ROI);
-		}
-		ellipse(out, ellipses[i], Scalar(0,0,255), 1);
-	}
-
-	/*if(in->pos_msec == 4) {
-	// Nastala chyba
-	int debug = 1;
-	debug++;
-	}
-	*/
-
-	// Elipsi
-	/*
-	zoznam objektov
-	pozeraj sa, ze ci ci existuje elipsa blizka v zozname MAX_SPEED
-	ak existuje , pouzi jej referenciu .. sprav zoznam pohybov cez linkedlist
-	potom k neexistuje pridaj ju do zoznamu a vygeneruj nove ID pre nu
-	sleduj, pre vsetky elipsi ci sa hybu, ked posledne 3000 snimkov nespravila pohyb, oznac ju ako staticky objekt
-	Ak elipsa vznikla, je mensia ako treshold a dalsiu snimku nema nasledovaca (zmizla) tak ju znac ako artefakt.
-	Vsetky elipsi, ktore maju nad Y hodnotu tak ju zneviditelni. (Druha kamera by ho zachytila).
-	Ak je elipsa priliz velka a dlho staticka, banner, tak ju schovaj tiez.
-	Renderuj aktualne elipsi, objekty. Stare nie. ( v debugu ano).
-	OBSERVER pattern
-
-	nastavoval som velkosti
-	odstranil so martefakty
-	definoval si motion tracker
-	prezentaciu mam
-
-	objekt sa moze hybat, ked rpekona MIN_THRES a ked sa uz nehybe ale v minulosti sa hybal tak to asi bude hrac
-	*/
-
-	resize(ROI, ROI, m_winSize);
-	resize(out, out, m_winSize);
-	resize(fgMaskMOG, fgMaskMOG, m_winSize);
-	imshow("Vybrana sekcia", ROI);
-	imshow("Vystup", out);
-	imshow("Maska", fgMaskMOG);
-}
-
-void SoccerBall::histogram(Mat src) {
-	vector<cv::Mat> imgRGB;
-	split(src, imgRGB);
-	int k = 4; // dres ma 2 casti, biela ciara, trava
-	int n = src.rows *src.cols;
-	Mat img3xN(n,3, CV_8U);
-	for(int i=0; i!=3; ++i) {  
-		imgRGB[i].reshape(1,n).copyTo(img3xN.col(i));
-	}
-
-	img3xN.convertTo(img3xN, CV_32F);
-	Mat bestLables;
-	kmeans(img3xN, k, bestLables, cv::TermCriteria(), 10, KMEANS_RANDOM_CENTERS );
-	bestLables = bestLables.reshape(0, src.rows);
-	convertScaleAbs(bestLables, bestLables, int(255/k));
-	resize(bestLables, bestLables, m_winSize);
-	imshow("result", bestLables);	
-
-	/// Separate the image in 3 places ( B, G and R )
-	/*vector<Mat> bgr_planes;
-	split( src, bgr_planes );
-
-	/// Establish the number of bins
-	int histSize = 256;
-
-	/// Set the ranges ( for B,G,R) )
-	float range[] = { 0, 256 } ;
-	const float* histRange = { range };
-
-	bool uniform = true; 
-	bool accumulate = false;
-
-	Mat b_hist, g_hist, r_hist;
-
-	/// Compute the histograms:
-	calcHist( &bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate );
-	calcHist( &bgr_planes[1], 1, 0, Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate );
-	calcHist( &bgr_planes[2], 1, 0, Mat(), r_hist, 1, &histSize, &histRange, uniform, accumulate );
-
-	// Draw the histograms for B, G and R
-	int hist_w = 512; 
-	int hist_h = 400;
-	int bin_w = cvRound( (double) hist_w/histSize );
-
-	Mat histImage( hist_h, hist_w, CV_8UC3, Scalar( 0,0,0) );
-
-	/// Normalize the result to [ 0, histImage.rows ]
-	normalize(b_hist, b_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-	normalize(g_hist, g_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-	normalize(r_hist, r_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-
-	/// Draw for each channel
-	for( int i = 1; i < histSize; i++ )
-	{
-		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(b_hist.at<float>(i-1)) ) ,
-			Point( bin_w*(i), hist_h - cvRound(b_hist.at<float>(i)) ),
-			Scalar( 255, 0, 0), 2, 8, 0  );
-		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(g_hist.at<float>(i-1)) ) ,
-			Point( bin_w*(i), hist_h - cvRound(g_hist.at<float>(i)) ),
-			Scalar( 0, 255, 0), 2, 8, 0  );
-		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(r_hist.at<float>(i-1)) ) ,
-			Point( bin_w*(i), hist_h - cvRound(r_hist.at<float>(i)) ),
-			Scalar( 0, 0, 255), 2, 8, 0  );
-	}
-
-	/// Display
-	imshow("Histogram", histImage );*/
-}
-
-// Vypocitaj v kolkych bodoch dochadza k prieniku
-int SoccerBall::intersection(vector<Point>& contour, Rect& rec) {
-	int pocet = 0;
-	for( UINT i = 0; i < contour.size(); i++ ) { 
-		if (rec.contains(contour[i])) {
-			pocet++;
-		}
-	}
-	return pocet;
 }
 
 void SoccerBall::Init() {

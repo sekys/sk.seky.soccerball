@@ -69,12 +69,20 @@ public:
 };
 
 class SoccerObject {
+private:
+	bool staticObj;
+	bool visible;
+
 public:
 	UINT id; // generovane ID
 	queue<FrameObject> positions; // TODO: moze byt obmedzeny na 20snimkov a info budeme ukladat inde
 	// int speed; // jeho posledne zachytena rychlost aby smem sledoval ikde asi bude
-	bool visible; // objekt s adalej uz enbude zobrazovat
 	UINT team;
+
+	SoccerObject() {
+		staticObj = false;
+		visible = true;
+	}
 
 	int distance() {
 		// Vypocitaj vzdialenost, ktoru presiel z historie
@@ -87,4 +95,21 @@ public:
 		out << ")";
 		return out;
 	}
+
+	/*
+	bool identify(RotatedRect& rect) {
+		const double MAX_DISTANCE = 100;
+
+			for( UINT a = 0; a < m_realObjects.size(); a++ ) { 
+			FrameObject& frame = m_realObjects[a].positions.back();
+			double distance = norm(frame.boundary.center - rect.center);
+			if(distance > MAX_DISTANCE) {
+				continue; // objekty su priliz vzdialene
+			}
+			int intersection = rotatedRectangleIntersection(rect, frame.boundary, Mat()); 
+			if(intersection == 0) {
+				continue; // objekty sa nedotykaju, nevieme zistit ci ide o ten isty objekt
+			}
+		}
+	}*/
 };

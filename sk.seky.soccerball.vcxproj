@@ -69,6 +69,7 @@
     <ClCompile Include="class.App.cpp" />
     <ClCompile Include="class.SoccerBall.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="class.App.hpp" />
@@ -77,6 +78,7 @@
     <ClInclude Include="class.VideoRecord.hpp" />
     <ClInclude Include="entities.hpp" />
     <ClInclude Include="log4cpp.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
