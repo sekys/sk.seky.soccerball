@@ -73,7 +73,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="class.App.hpp" />
+    <ClInclude Include="class.DetermineObject.hpp" />
     <ClInclude Include="class.SoccerBall.hpp" />
+    <ClInclude Include="class.ThresholdColor.hpp" />
     <ClInclude Include="class.Time.hpp" />
     <ClInclude Include="class.VideoRecord.hpp" />
     <ClInclude Include="entities.hpp" />

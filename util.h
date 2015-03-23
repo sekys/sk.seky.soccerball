@@ -16,3 +16,4 @@ Mat computeClusters(Mat src);
 Mat computeHistogram(Mat src);
 int intersectionPoints(vector<Point>& contour, Rect& rec);
 bool isRelativeIntersection(vector<Point>& contour, Rect& rec, const float& volume);
+void createWindows(const char* windows[]);

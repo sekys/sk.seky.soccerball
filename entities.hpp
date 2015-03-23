@@ -30,17 +30,17 @@ inline ostream& operator<< (ostream& out, RotatedRect& object) {
 /**
 * Trieda pre obrazok ako univerzalna entita v ramci Carlos.
 */
-class Image {
+class Frame {
 public:
 	double pos_msec; // urcuje poziciu snimky vo video v ms
 	Mat data;
 
-	friend ostream& operator<< (ostream& out, Image& object) {
+	friend ostream& operator<< (ostream& out, Frame& object) {
 		out << "Image(pos_msec:" << object.pos_msec << ")";
 		return out;
 	}
-	Image* clone() {
-		Image* temp = new Image();
+	Frame* clone() {
+		Frame* temp = new Frame();
 		temp->pos_msec = this->pos_msec;
 		temp->data = this->data.clone();
 		return temp;
@@ -68,33 +68,6 @@ public:
 	}
 };
 
-class SoccerObject {
-private:
-	bool staticObj;
-	bool visible;
-
-public:
-	UINT id; // generovane ID
-	queue<FrameObject> positions; // TODO: moze byt obmedzeny na 20snimkov a info budeme ukladat inde
-	// int speed; // jeho posledne zachytena rychlost aby smem sledoval ikde asi bude
-	UINT team;
-
-	SoccerObject() {
-		staticObj = false;
-		visible = true;
-	}
-
-	int distance() {
-		// Vypocitaj vzdialenost, ktoru presiel z historie
-	}
-
-	friend ostream& operator<< (ostream& out, SoccerObject& object) {
-		out << "SoccerObject(";
-		out << "id: " << object.id << ",";
-		//out << "speed: " << object.speed << ",";
-		out << ")";
-		return out;
-	}
 
 	/*
 	bool identify(RotatedRect& rect) {
@@ -112,4 +85,3 @@ public:
 			}
 		}
 	}*/
-};

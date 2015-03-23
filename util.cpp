@@ -205,9 +205,9 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
 Mat computeClusters(Mat src) {
 	vector<cv::Mat> imgRGB;
 	split(src, imgRGB);
-	int k = 4; // dres ma 2 casti, biela ciara, trava
+	int k = 3; // dres ma 2 casti, biela ciara, trava
 	int n = src.rows *src.cols;
-	Mat img3xN(n,3, CV_8U);
+	Mat img3xN(n, 3, CV_8U);
 	for(int i=0; i!=3; ++i) {  
 		imgRGB[i].reshape(1,n).copyTo(img3xN.col(i));
 	}
@@ -226,7 +226,7 @@ Mat computeHistogram(Mat src) {
 	split( src, bgr_planes );
 
 	/// Establish the number of bins
-	int histSize = 256;
+	int histSize = 8;
 
 	/// Set the ranges ( for B,G,R) )
 	float range[] = { 0, 256 } ;
@@ -284,4 +284,14 @@ int intersectionPoints(vector<Point>& contour, Rect& rec) {
 bool isRelativeIntersection(vector<Point>& contour, Rect& rec, const float& volume) {
 	int podobnost = intersectionPoints(contour, rec);
 	return (podobnost > ((int) contour.size() * volume));
+}
+
+void createWindows(const char* windows[]) {
+	const size_t len = sizeof(windows) / sizeof(windows[0]);
+	for (size_t i = 0; i < len; ++i) {
+		const char* meno = windows[i];
+		namedWindow(meno);
+		resizeWindow(meno, 640, 480);
+		moveWindow(meno, 0, 0);
+	}
 }

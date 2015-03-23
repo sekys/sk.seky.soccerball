@@ -14,7 +14,6 @@ private:
 	// http://docs.opencv.org/modules/highgui/doc/reading_and_writing_images_and_video.html#videocapture
 	VideoCapture* cap;
 	string filename;
-	queue<Image*> buffer;
 
 	void load() {
 		if(filename.empty()) {
@@ -55,35 +54,13 @@ public:
 	}
 
 	// Ziskaj aktualnu snimku z kamery
-	Image* readNext() {
-		Image* frame = new Image();
+	Frame* readNext() {
+		Frame* frame = new Frame();
 		if(!cap->read(frame->data)) {
 			throw EndOfStream();
 		}
 		frame->pos_msec = cap->get(CV_CAP_PROP_POS_MSEC) / 40;
 		return frame;
-	}
-
-	Image* bufferNext() {
-		Image* frame = new Image();
-		if(buffer.empty()) {
-			throw EndOfStream();
-		}
-		frame = buffer.front();
-		buffer.pop();
-		frame->pos_msec = cap->get(CV_CAP_PROP_POS_MSEC);
-		return frame;
-	}
-
-	void readAll() {
-		try {
-			for(int i=0; i < 300; i++) {
-				Image* frame = this->readNext();
-				buffer.push(frame);
-			}
-		} catch(VideoRecord::EndOfStream stream) {
-
-		}
 	}
 
 	void doReset() {
