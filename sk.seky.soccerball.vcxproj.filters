@@ -21,10 +21,16 @@
     <ClCompile Include="class.App.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="class.SoccerBall.cpp">
+    <ClCompile Include="util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="util.cpp">
+    <ClCompile Include="class.Soccer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="class.ObjectDetector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="class.Drawer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,9 +47,6 @@
     <ClInclude Include="class.Time.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="class.SoccerBall.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="log4cpp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -53,7 +56,13 @@
     <ClInclude Include="class.ThresholdColor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="class.DetermineObject.hpp">
+    <ClInclude Include="class.Soccer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="class.ObjectDetector.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="class.Drawer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

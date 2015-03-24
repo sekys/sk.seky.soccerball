@@ -2,7 +2,7 @@
 #include <fstream>
 #include <log4cpp/Category.hh>
 #include <log4cpp/PropertyConfigurator.hh>
-#include "class.SoccerBall.hpp"
+#include "class.Soccer.hpp"
 
 /**
 * Metoda za pomoci ktorej sa spsuti program.
@@ -16,7 +16,7 @@ int main()
 	log4cpp::Category::getRoot().debug("Starting log4cpp, configuration %s", initFileName.c_str());
 
 	// Carlos postupne inicializujeme, spustime, deinicializujeme
-	SoccerBall* app = new SoccerBall();
+	Soccer* app = new Soccer();
 	app->start();
 	delete app;
 

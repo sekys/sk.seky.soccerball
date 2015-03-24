@@ -50,38 +50,67 @@ public:
 	}
 };
 
-/**
-* Trieda reprezentuje objekt detekovany na obrazovke videa.
-* Dany objekt odkazuje na svetovy objekt
-*/
+enum DetectedObjectType { 
+	UNKNOWN,
+	ARTEFACT,
+	BANNER, 
+	PERSON,  // out playground 
+	GOAL_KEEPER_A, 
+	GOAL_KEEPER_B, 
+	PLAYER_A, 
+	PLAYER_B, 
+	REFEREE,
+	BALL
+};
+
+inline ostream& operator<< (ostream& out, DetectedObjectType& type) {
+	switch (type)
+	{
+	case UNKNOWN:   out << "UNKNOWN"; break;
+	case ARTEFACT:   out << "ARTEFACT"; break;
+	case BANNER: out << "BANNER"; break;
+	case PERSON: out << "PERSON"; break;
+	case GOAL_KEEPER_A: out << "GOAL_KEEPER_A"; break;
+	case GOAL_KEEPER_B: out << "GOAL_KEEPER_B"; break;
+	case PLAYER_A: out << "PLAYER_A"; break;
+	case PLAYER_B: out << "PLAYER_B"; break;
+	case REFEREE: out << "REFEREE"; break;
+	case BALL: out << "BALL"; break;
+	default:      out << "NULL"; break;
+	}
+	return out;
+}
+
 class FrameObject {
 public:
-	RotatedRect boundary;
-	int frame;
+	RotatedRect m_boundary;
+	vector<Point> m_countour;
+	DetectedObjectType type;
+
+	FrameObject(vector<Point> kontura, RotatedRect rec) {
+		m_countour = kontura;
+		m_boundary = rec;
+		type = DetectedObjectType::UNKNOWN;
+	}
+
+	Mat getROI(Mat& image) {
+		Rect rec =  m_boundary.boundingRect();
+		rec = rec & Rect(0, 0, image.cols, image.rows);
+		return Mat(image, rec);
+	}
+
+	float getSpace() {
+		return m_boundary.size.area();;
+	}
+
+	int pixels() {
+		return m_countour.size();
+	}
 
 	friend ostream& operator<< (ostream& out, FrameObject& object) {
 		out << "FrameObject(";
-		out << "boundary: " << object.boundary << ",";
-		out << "frame: " << object.frame << ",";
+		out << "type: " << object.type << ",";
 		out << ")";
 		return out;
 	}
 };
-
-
-	/*
-	bool identify(RotatedRect& rect) {
-		const double MAX_DISTANCE = 100;
-
-			for( UINT a = 0; a < m_realObjects.size(); a++ ) { 
-			FrameObject& frame = m_realObjects[a].positions.back();
-			double distance = norm(frame.boundary.center - rect.center);
-			if(distance > MAX_DISTANCE) {
-				continue; // objekty su priliz vzdialene
-			}
-			int intersection = rotatedRectangleIntersection(rect, frame.boundary, Mat()); 
-			if(intersection == 0) {
-				continue; // objekty sa nedotykaju, nevieme zistit ci ide o ten isty objekt
-			}
-		}
-	}*/

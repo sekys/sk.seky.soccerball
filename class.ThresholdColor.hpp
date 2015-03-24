@@ -36,6 +36,10 @@ public:
 		return mask;
 	}
 
+	int pixels(Mat& input) {
+		return countNonZero( getMask(input) );
+	}
+
 	Scalar getMin() {
 		return m_min;
 	}

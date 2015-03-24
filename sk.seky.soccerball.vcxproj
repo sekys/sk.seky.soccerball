@@ -67,14 +67,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="class.App.cpp" />
-    <ClCompile Include="class.SoccerBall.cpp" />
+    <ClCompile Include="class.Drawer.cpp" />
+    <ClCompile Include="class.ObjectDetector.cpp" />
+    <ClCompile Include="class.Soccer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="class.App.hpp" />
-    <ClInclude Include="class.DetermineObject.hpp" />
-    <ClInclude Include="class.SoccerBall.hpp" />
+    <ClInclude Include="class.Drawer.hpp" />
+    <ClInclude Include="class.ObjectDetector.hpp" />
+    <ClInclude Include="class.Soccer.hpp" />
     <ClInclude Include="class.ThresholdColor.hpp" />
     <ClInclude Include="class.Time.hpp" />
     <ClInclude Include="class.VideoRecord.hpp" />

@@ -1,31 +1,32 @@
-#include "class.SoccerBall.hpp"
+#include "class.Soccer.hpp"
 #include <opencv2/imgproc/imgproc.hpp>
 #include "util.h"
 
-SoccerBall::SoccerBall() 
+Soccer::Soccer() 
 {
-	// Nacitaj vsetky casti SoccerBalla
+	// Nacitaj vsetky casti Soccera
 	log = CREATE_LOG4CPP();
 	if(log != NULL) {
-		log->debug("Starting SoccerBall");
+		log->debug("Starting Soccer");
 	}
 }
 
-SoccerBall::~SoccerBall() {
+Soccer::~Soccer() {
 	SAFE_DELETE(m_record);
 	SAFE_DELETE(m_pMOG2);
-	SAFE_DELETE(m_roi);
+	SAFE_DELETE(m_detector);
+	SAFE_DELETE(m_drawer);
 	SAFE_DELETE(m_grass);
 	SAFE_RELEASE(m_actual);
-	m_realObjects.clear();
-	if(log != NULL) log->debug("Ending SoccerBall");
+	//m_realObjects.clear();
+	if(log != NULL) log->debug("Ending Soccer");
 }
 
-int SoccerBall::getLockFPS() {
+int Soccer::getLockFPS() {
 	return 60;
 }
 
-bool SoccerBall::Run() {
+bool Soccer::Run() {
 	int key = cv::waitKey(30);
 	string str;  
 	str =(char) key;
@@ -39,7 +40,7 @@ bool SoccerBall::Run() {
 	return true;
 }
 
-void SoccerBall::commandArrive(string& cmd) {
+void Soccer::commandArrive(string& cmd) {
 	// Pauza
 	if(cmd == "s") {
 		m_pause = !m_pause;
@@ -47,30 +48,30 @@ void SoccerBall::commandArrive(string& cmd) {
 		return;
 	}
 	if(cmd == "d") {		
-		m_debugDraw = !m_debugDraw; 
-		log->debugStream() << "m_debugDraw " << m_debugDraw;
+		m_drawer->switchDebugDraw();
+		return;
+	}
+	if(cmd == "t") {
+		m_drawer->switchTeamDraw();
 		return;
 	}
 
 	// ROI oblast
 	if(cmd == "w") {		
-		m_roiDraw = !m_roiDraw;
-		log->debugStream() << "m_roiDraw " << m_roiDraw;
+		m_drawer->switchROIDraw();
 		return;
 	}
 	if(cmd == "e") {		
-		m_roi_index++;
-		log->debugStream() << "m_roi_index " << m_roi_index;
+		m_drawer->nextROI();
 		return;
 	}
 	if(cmd == "q") {
-		m_roi_index--;
-		log->debugStream() << "m_roi_index " << m_roi_index;
+		m_drawer->previousROI();
 		return;
 	}
 }
 
-void SoccerBall::loadNextFrame() {
+void Soccer::loadNextFrame() {
 	// Ziskaj snimok ..
 	SAFE_RELEASE(m_actual);
 	try {
@@ -89,7 +90,7 @@ void SoccerBall::loadNextFrame() {
 	}
 }
 
-void SoccerBall::processFrame(Frame* in) {
+void Soccer::processFrame(Frame* in) {
 	// Predspracuj vstup podla potreby, vypocitaj fgMasku
 	Size velkostVstupu = m_winSize; //Size(1920, 1080);
 	resize(m_actual->data, m_actual->data, velkostVstupu);
@@ -120,7 +121,7 @@ void SoccerBall::processFrame(Frame* in) {
 	processImage(m_actual->data.clone());
 }
 
-void SoccerBall::processImage(Mat& input) {
+void Soccer::processImage(Mat& input) {
 	// Ziskaj masku pohybu cez MOG algoritmus
 	Mat mogMask;
 	m_pMOG2->operator()(input, mogMask);
@@ -141,123 +142,37 @@ void SoccerBall::processImage(Mat& input) {
 	//imshow("oper2", oper); 
 	
 	// Najdi objekty
-	vector<RotatedRect> objects;
-	findObjects(input, finalMask, objects);
-	if(m_roiDraw) drawROI(input, finalMask, objects);
-
-	// Vykresli detekovane oblasti
-	for( UINT i = 0; i < objects.size(); i++ ) { 
-		ellipse(input, objects[i], Scalar(0,0,255), 1);
-	}
-	imshow("Vystup", input);
+	vector<FrameObject*> objects;
+	m_detector->findObjects(input, finalMask, objects);
+	m_drawer->draw(input, finalMask, objects);
 }
 
-void SoccerBall::drawROI(Mat& image, Mat& mask, vector<RotatedRect>& objects) {
-	// Find ROI or select main image
-	Mat ROI;
-	UINT size = objects.size();
-	if(size > 0) {
-		UINT index =  m_roi_index % size;
-		Rect rec = objects[index].boundingRect();
-		rec = rec & Rect(0, 0, image.cols, image.rows);
-		ROI = Mat(image, rec).clone(); 
 
-		// Vykresli pre obraz cluster a histogram
-		Mat prehlad;
-		ROI.copyTo(prehlad, Mat(mask, rec)); 
-		ROI = prehlad;
-
-		Mat roiMask = m_roi->getMask(ROI);
-		resize(roiMask, roiMask, m_winSize);
-		imshow("roiMask", roiMask);
-		//Mat histogram = computeHistogram(labColor);
-		//resize(histogram, histogram, m_winSize);
-		//imshow("Histogram HSV",  computeHistogram(labColor) );
-		Mat labels = computeClusters(ROI);
-		resize(labels, labels, m_winSize);
-		imshow("result", labels);			
-	} else {
-		ROI = Mat(image);
-	}
-	resize(ROI, ROI, m_winSize);
-	imshow("Vybrana sekcia", ROI);
-}
-
-// Find objects
-void SoccerBall::findObjects(Mat& image, Mat& fgMaskMOG, vector<RotatedRect>& objects) {
-	// Vyber kontury
-	vector<vector<Point>> contours;
-	findContours(fgMaskMOG, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-
-	// Spravuj a filtruj kontury
-	const int MIN_PIXELS_IN_CONTOUR = 15;// 
-	const int MIN_AREA = 20; // 868 velksot hraca
-	const int MAX_AREA = 5000;
-	Rect BANNER_AREA(0, 0, 640, 18);
-	const float VOLUME_BANNER = 0.8f;
-
-	for( UINT i = 0; i < contours.size(); i++ ) { 
-		vector<Point> kontura = contours[i];
-		if( kontura.size() < MIN_PIXELS_IN_CONTOUR) { 
-			if(m_debugDraw) drawContours( image, contours, i, Scalar(255,255,0), 1);
-			continue;
-		}
-		RotatedRect rec = fitEllipse( Mat(kontura) );
-		float takeSpace = rec.size.area();
-		if(takeSpace < MIN_AREA || takeSpace > MAX_AREA) {
-			if(m_debugDraw) drawContours( image, contours, i, Scalar(255,0,0), 1);
-			continue;
-		}
-
-		if(isRelativeIntersection(kontura, BANNER_AREA, VOLUME_BANNER)) {
-			if(m_debugDraw) drawContours( image, contours, i, Scalar(0,255,0), 1);
-			continue;
-		}
-
-		objects.push_back(rec);
-	}
-}
-
-void SoccerBall::Init() {
+void Soccer::Init() {
 	m_record = new VideoRecord("data/filmrole5.avi");
 	m_pMOG2 = new BackgroundSubtractorMOG2(200, 16.0, false);
 	m_grass = new ThresholdColor(Scalar(35, 72, 50), Scalar(51, 142, 144));
-	m_roi = new ThresholdColor(Scalar(35, 72, 50), Scalar(51, 142, 144));
-
+	m_detector = new ObjectDetector();
+	m_drawer = new Drawer();
 	m_maxNumberOfPoints = 50;
 	m_learning = true;
 	m_mogLearnFrames = 200;
 	m_winSize = Size(640, 480); 
 	m_pause = false;
 	m_actual = NULL;
-	m_roi_index = 0;
-	m_roiDraw = false;
-	m_debugDraw = false;
 
 	const char* windows[] = { 
 		//"mogMask", 
 		//"grassMask",
-		//"finalMask", 
-		"roiMask", 
+		"Color mask", 
+		"Roi", 
 		"Vystup" 
 	};
-	createWindows(windows);
+	//createWindows(windows);
 	m_grass->createTrackBars("grassMask");
-	m_roi->createTrackBars("roiMask");
-}
-/*
-bool determineVisibility(FrameObject& object) {
-	return !(object.type == ARTEFACT || object.type == BANNER);
-
 }
 
-Scalar determineColor(FrameObject& object) {
-	if(type) {
-
-	}
-}
-*/
-void SoccerBall::opticalFlow(Mat& inputFrame, Mat& outputFrame) {
+void Soccer::opticalFlow(Mat& inputFrame, Mat& outputFrame) {
 	if (m_mask.rows != inputFrame.rows || m_mask.cols != inputFrame.cols)
 		m_mask.create(inputFrame.rows, inputFrame.cols, CV_8UC1);
 
@@ -313,8 +228,8 @@ void SoccerBall::opticalFlow(Mat& inputFrame, Mat& outputFrame) {
 	m_prevPts = trackedPts;
 	m_nextImg.copyTo(m_prevImg);
 }
-
-void SoccerBall::buildSoccerObjects(vector<RotatedRect>& imageObjects, vector<FrameObject>& realObjects) {
+/*
+void Soccer::buildSoccerObjects(vector<RotatedRect>& imageObjects, vector<FrameObject>& realObjects) {
 	const float VOLUME_BANNER = 0.8f;
 
 	for( UINT a = 0; a < realObjects.size(); a++ ) { 
@@ -325,8 +240,9 @@ void SoccerBall::buildSoccerObjects(vector<RotatedRect>& imageObjects, vector<Fr
 	}
 }
 
-int SoccerBall::identifySoccerObjects(RotatedRect& rect) {
-	/*const double MAX_DISTANCE = 100;
+
+int Soccer::identifySoccerObjects(RotatedRect& rect) {
+	const double MAX_DISTANCE = 100;
 
 	for( UINT a = 0; a < m_realObjects.size(); a++ ) { 
 		FrameObject& frame = m_realObjects[a].positions.back();
@@ -339,6 +255,6 @@ int SoccerBall::identifySoccerObjects(RotatedRect& rect) {
 			continue; // objekty sa nedotykaju, nevieme zistit ci ide o ten isty objekt
 		}
 	}
-	*/
 	return 0;
 }
+*/

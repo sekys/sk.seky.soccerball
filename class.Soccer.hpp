@@ -5,11 +5,10 @@
 #include "class.VideoRecord.hpp"
 #include <opencv2/video/background_segm.hpp>
 #include "class.ThresholdColor.hpp"
+#include "class.ObjectDetector.hpp"
+#include "class.Drawer.hpp"
 
-/**
-* Trieda reprezentuje hlavny projekt Carlos a jeho halvny algoritmus, ktory spaja ostatne moduly
-*/
-class SoccerBall : public App
+class Soccer : public App
 {
 private:
 	// Atributy aplikacie
@@ -30,19 +29,13 @@ private:
 	bool m_learning;
 
 	// Determine objects
+	ObjectDetector* m_detector;
+	Drawer* m_drawer;
 	void processImage(Mat& input);
-	vector<FrameObject> m_realObjects;
+	//vector<FrameObject> m_realObjects;
 	ThresholdColor* m_grass;
-	ThresholdColor* m_roi;
-	int m_roi_index;
-	bool m_roiDraw;
-	bool m_debugDraw;
-
-	void findObjects(Mat& image, Mat& fbMask, vector<RotatedRect>& objects);
-	void buildSoccerObjects(vector<RotatedRect>& imageObjects, vector<FrameObject>& realObjects);
-	void drawROI(Mat& image, Mat& mask, vector<RotatedRect>& objects);
-	int identifySoccerObjects(RotatedRect& object);
 	
+	// Flow
 	int m_maxNumberOfPoints;
 	void opticalFlow(Mat& inputFrame, Mat& outputFrame);
 	Mat m_prevImg;
@@ -53,9 +46,8 @@ private:
 	vector<cv::Point2f>  m_prevPts;
 	vector<cv::Point2f>  m_nextPts;
 
-
 protected:
-	// Inicializacia Carlosu
+	// Inicializacia programu
 	virtual void Init();
 
 	// Run() metoda je vola v cykle dokedy bezi apliakcia
@@ -64,6 +56,6 @@ protected:
 
 public:
 
-	SoccerBall();
-	~SoccerBall();
+	Soccer();
+	~Soccer();
 };
