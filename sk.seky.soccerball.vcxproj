@@ -70,6 +70,7 @@
     <ClCompile Include="class.Drawer.cpp" />
     <ClCompile Include="class.ObjectDetector.cpp" />
     <ClCompile Include="class.Soccer.cpp" />
+    <ClCompile Include="lkdemo.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>

@@ -17,7 +17,6 @@ private:
 
 	void load() {
 		if(filename.empty()) {
-			// TODO: VideoCapture nacitava vlastny DLL subor a moze sposobit loader dead lock
 			cap = new VideoCapture(0);
 		} else {
 			cap = new VideoCapture(filename);
@@ -66,6 +65,5 @@ public:
 	void doReset() {
 		unload();
 		load();
-		// cap->set(CV_CAP_PROP_POS_MSEC, 0); toto sposobuje delay a je to tak neefektivne
 	}
 };

@@ -26,9 +26,6 @@ private:
 		bool operator< (const BinInfo &b) const {
 			return this->count < b.count;
 		}
-		//inline  bool operator < (const ObjectDetector &p1, const ObjectDetector &p2 ) {
-		//	return p1.count < b.count; 
-		//} 
 	};
 
 	// Filtruj kontury

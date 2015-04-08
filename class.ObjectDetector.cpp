@@ -67,20 +67,3 @@ void ObjectDetector::findObjects(Mat& image, Mat& mask, vector<FrameObject*>& ob
 		determineObject(image, mask, obj);
 	}
 }
-
-/*
-bool identify(RotatedRect& rect) {
-const double MAX_DISTANCE = 100;
-
-for( UINT a = 0; a < m_realObjects.size(); a++ ) { 
-FrameObject& frame = m_realObjects[a].positions.back();
-double distance = norm(frame.boundary.center - rect.center);
-if(distance > MAX_DISTANCE) {
-continue; // objekty su priliz vzdialene
-}
-int intersection = rotatedRectangleIntersection(rect, frame.boundary, Mat()); 
-if(intersection == 0) {
-continue; // objekty sa nedotykaju, nevieme zistit ci ide o ten isty objekt
-}
-}
-}*/

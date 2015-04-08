@@ -34,13 +34,17 @@ private:
 	void processImage(Mat& input);
 	//vector<FrameObject> m_realObjects;
 	ThresholdColor* m_grass;
-	
+
 	// Flow
 	int m_maxNumberOfPoints;
-	void opticalFlow(Mat& inputFrame, Mat& outputFrame);
-	Mat m_prevImg;
-	Mat m_nextImg;
-	Mat m_mask;
+	cv::Mat m_prevImg;
+	cv::Mat m_nextImg;
+	cv::Mat m_mask;
+	Ptr<cv::FeatureDetector> m_detector2;
+	vector<cv::KeyPoint> m_prevKeypoints;
+	cv::Mat                   m_prevDescriptors;
+	cv::Mat                   m_nextDescriptors;
+	void opticalFlow(Mat& inputFrame, Mat& outputFrame, vector<FrameObject*>& objs);
 	vector<unsigned char> m_status;
 	vector<float>         m_error;
 	vector<cv::Point2f>  m_prevPts;

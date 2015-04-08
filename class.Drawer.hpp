@@ -14,9 +14,10 @@ private:
 	log4cpp::Category* log;
 	ThresholdColor* m_roi;
 	int m_roi_index;
+	int m_drawType;
 	bool m_roiDraw;
 	bool m_debugDraw;
-	bool m_drawTeams;
+	bool m_teamColoring;
 
 	void drawROI(Mat& image, Mat& mask, vector<FrameObject*>& objs);
 	bool isVisible(FrameObject* obj);
@@ -30,6 +31,7 @@ public:
 	void nextROI();
 	void switchROIDraw();
 	void switchDebugDraw();
-	void switchTeamDraw();
+	void switchTeamColoring();
+	void switchDrawType();
 	void draw(Mat& image, Mat& mask, vector<FrameObject*>& objs);
 };

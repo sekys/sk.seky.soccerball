@@ -4,7 +4,8 @@ Drawer::Drawer() {
 	m_roi_index = 0;
 	m_roiDraw = false;
 	m_debugDraw = false;
-	m_drawTeams = false;
+	m_teamColoring = false;
+	m_drawType = 0;
 	m_roi = new ThresholdColor(Scalar(35, 72, 50), Scalar(51, 142, 144));
 	m_roi->createTrackBars("roiMask");
 
@@ -17,9 +18,13 @@ Drawer::~Drawer() {
 	SAFE_DELETE(m_roi);
 }
 
-void Drawer::switchTeamDraw() {
-	m_drawTeams = !m_drawTeams; 
-	log->debugStream() << "m_drawTeams " << m_drawTeams;
+void Drawer::switchTeamColoring() {
+	m_teamColoring = !m_teamColoring; 
+	log->debugStream() << "m_teamColoring " << m_teamColoring;
+}
+void Drawer::switchDrawType() {
+	m_drawType = (m_drawType + 1) % 3; 
+	log->debugStream() << "m_drawType " << m_drawType;
 }
 void Drawer::switchDebugDraw() {
 	m_debugDraw = !m_debugDraw; 
@@ -49,10 +54,17 @@ void Drawer::draw(Mat& image, Mat& mask, vector<FrameObject*>& objs) {
 			continue;
 		}
 		Scalar color = determineColor(obj); 
-		//ellipse(image, objs.at(i)->m_boundary, color, 1);
-		ostringstream os;
-		os << obj->type;
-		putText(image, os.str(), obj->m_boundary.center, 0, 0.2, color, 1, 8);
+		if(m_drawType == 0) {
+			ellipse(image, objs.at(i)->m_boundary, color, 1);
+		} else if(m_drawType == 2) {
+			ostringstream os;
+			os << obj->type;
+			putText(image, os.str(), obj->m_boundary.center, 0, 0.2, color, 1, 8);
+		} else if(m_drawType == 1) {
+			vector<vector<Point> > contours;
+			contours.push_back(objs.at(i)->m_countour);
+			drawContours(image, contours, 0, color);
+		}
 	}
 	imshow("Vystup", image);
 }
@@ -81,7 +93,7 @@ Scalar Drawer::determineColor(FrameObject* obj) {
 	if(obj->type == REFEREE) {
 		return Scalar(0, 0, 255);
 	}
-	if(m_drawTeams && obj->type == GOAL_KEEPER_A) {
+	if(m_teamColoring && obj->type == GOAL_KEEPER_A) {
 		return Scalar(255, 255, 255);
 	}
 	if(obj->type == GOAL_KEEPER_A) {

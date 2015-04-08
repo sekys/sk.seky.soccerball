@@ -7,6 +7,7 @@
 /**
 * Metoda za pomoci ktorej sa spsuti program.
 */
+/*
 int main()
 {
 	// Nastav logy
@@ -15,10 +16,11 @@ int main()
 	log4cpp::PropertyConfigurator::configure(initFileName);
 	log4cpp::Category::getRoot().debug("Starting log4cpp, configuration %s", initFileName.c_str());
 
-	// Carlos postupne inicializujeme, spustime, deinicializujeme
+	// Appku postupne inicializujeme, spustime, deinicializujeme
 	Soccer* app = new Soccer();
 	app->start();
 	delete app;
 
 	return 0;
 }
+*/
