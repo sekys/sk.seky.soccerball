@@ -295,3 +295,15 @@ void createWindows(const char* windows[]) {
 		moveWindow(meno, 0, 0);
 	}
 }
+
+void drawPoints(Mat&image, vector<Point>& points, Scalar color) {
+	vector<vector<Point> > contours;
+	contours.push_back(points);
+	drawContours(image, contours, 0, color);
+}
+
+void drawPoints(Mat&image, vector<Point2f>& points, Scalar color) {
+	vector<vector<Point> > contours;
+	contours.push_back(points);
+	drawContours(image, contours, 0, color);
+}

@@ -1,4 +1,5 @@
 #include "class.Drawer.hpp"
+#include "util.h"
 
 Drawer::Drawer() {
 	m_roi_index = 0;
@@ -61,9 +62,7 @@ void Drawer::draw(Mat& image, Mat& mask, vector<FrameObject*>& objs) {
 			os << obj->type;
 			putText(image, os.str(), obj->m_boundary.center, 0, 0.2, color, 1, 8);
 		} else if(m_drawType == 1) {
-			vector<vector<Point> > contours;
-			contours.push_back(objs.at(i)->m_countour);
-			drawContours(image, contours, 0, color);
+			drawPoints(image, objs.at(i)->m_countour, color);
 		}
 	}
 	imshow("Vystup", image);

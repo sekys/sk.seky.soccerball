@@ -17,3 +17,5 @@ Mat computeHistogram(Mat src);
 int intersectionPoints(vector<Point>& contour, Rect& rec);
 bool isRelativeIntersection(vector<Point>& contour, Rect& rec, const float& volume);
 void createWindows(const char* windows[]);
+void drawPoints(Mat& image, vector<Point>& points, Scalar color);
+void drawPoints(Mat& image, vector<Point2f>& points, Scalar color);

@@ -18,6 +18,7 @@ Soccer::~Soccer() {
 	SAFE_DELETE(m_drawer);
 	SAFE_DELETE(m_grass);
 	SAFE_RELEASE(m_actual);
+	SAFE_DELETE(m_tracer);
 	//m_realObjects.clear();
 	if(log != NULL) log->debug("Ending Soccer");
 }
@@ -151,7 +152,7 @@ void Soccer::processImage(Mat& input) {
 	vector<FrameObject*> objects;
 	m_detector->findObjects(input, finalMask, objects);
 	Mat out;
-	opticalFlow(input, out, objects);
+	m_tracer->process(input, objects);
 	m_drawer->draw(input, finalMask, objects);
 }
 
@@ -162,12 +163,12 @@ void Soccer::Init() {
 	m_grass = new ThresholdColor(Scalar(35, 72, 50), Scalar(51, 142, 144));
 	m_detector = new ObjectDetector();
 	m_drawer = new Drawer();
-	m_maxNumberOfPoints = 50;
 	m_learning = true;
 	m_mogLearnFrames = 200;
 	m_winSize = Size(640, 480); 
 	m_pause = false;
 	m_actual = NULL;
+	m_tracer = new ObjectTracer();
 
 	const char* windows[] = { 
 		//"mogMask", 
@@ -178,84 +179,10 @@ void Soccer::Init() {
 	};
 	//createWindows(windows);
 	m_grass->createTrackBars("grassMask");
-	//m_detector2 = cv::FeatureDetector::create("GridFAST");
 }
 
-// http://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_video/py_lucas_kanade/py_lucas_kanade.html
-void Soccer::opticalFlow(Mat& inputFrame, Mat& outputFrame, vector<FrameObject*>& objs) {
-	inputFrame.copyTo(outputFrame); 
-	cvtColor(inputFrame, m_nextImg, cv::COLOR_BGR2GRAY);
-
-	if (m_mask.rows != inputFrame.rows || m_mask.cols != inputFrame.cols)
-		m_mask.create(inputFrame.rows, inputFrame.cols, CV_8UC1); // maska je vytvorena len jeden krat
-	if (m_prevPts.size() > 0) {
-		// http://docs.opencv.org/modules/video/doc/motion_analysis_and_object_tracking.html
-		cv::calcOpticalFlowPyrLK(m_prevImg, m_nextImg, m_prevPts, m_nextPts, m_status, m_error); //body pre jednu crtu?
-		// algoritmus mi vlastne povie, ze tieto body X,Y kam sa presunuli
-		// lenz eja potrebujem vediet, ze hrac ID(X, Y) je tam a tam
-	}
-
-	// VYkresli kruhy a ciary do vysledneho obrazka a v maske zaznaci oblast, kde sa mozu vyskytovat podobny objekt 
-	m_mask = cv::Scalar(255); // maska je vzdy plna
-	std::vector<cv::Point2f> trackedPts;
-	for (size_t i=0; i<m_status.size(); i++) {
-		if (m_status[i]) {
-			trackedPts.push_back(m_nextPts[i]);
-			cv::circle(m_mask, m_prevPts[i], 15, cv::Scalar(0), -1);
-			cv::line(outputFrame, m_prevPts[i], m_nextPts[i], cv::Scalar(0,250,0));
-			cv::circle(outputFrame, m_nextPts[i], 3, cv::Scalar(0,250,0), -1);
-		}
-	}
-	
-	// Ked sa cast keypointov stratila
-	bool needDetectAdditionalPoints = trackedPts.size() < m_maxNumberOfPoints;
-	if (needDetectAdditionalPoints)
-	{		
-		// obraz zachytava le cast ihriska a tak sa moze stat, ze skupina hracov pride uz do sceny
-		imshow("Flow mask1", m_mask); 
-		
-		// ja by som skor potreboval vediet, ze maska ROI a druha maska jak su si podobne a vektor mozneho smeru
-		vector<cv::Point2f> m_nextKeypoints;
-		bool detected = false;
-		for( UINT i = 0; i < objs.size(); i++ ) { 
-			FrameObject* obj = objs.at(i);
-			if(obj->type != PLAYER_A) {
-				continue;
-			}
-
-			// skopiruj klucove body z kontury
-			for (size_t i=0; i<obj->m_countour.size(); i++) {
-				m_nextKeypoints.push_back(obj->m_countour[i]);
-			}
-			detected = true;
-			break;
-		}
-
-		if(!detected) {
-			return; // nemame ani jednu ROI oblast
-		}
-		// Vyhladaj nove keypointy, vsetky alebo cast z nich na zaklade masky
-		//m_detector2->detect(m_nextImg, m_nextKeypoints, m_mask);
-		
-		// nahodne vyber cast z nich a pridaj ich ze ich sledujeme
-		int pointsToDetect = m_maxNumberOfPoints -  trackedPts.size();
-		if (m_nextKeypoints.size() > pointsToDetect) {
-			std::random_shuffle(m_nextKeypoints.begin(), m_nextKeypoints.end());
-			m_nextKeypoints.resize(pointsToDetect);
-		}
-
-		// Nove keypointy uloz a zaznac do obrazku
-		std::cout << "Detected additional " << m_nextKeypoints.size() << " points" << std::endl;
-		for (size_t i=0; i<m_nextKeypoints.size(); i++) {
-			trackedPts.push_back(m_nextKeypoints[i]);
-			cv::circle(outputFrame, m_nextKeypoints[i], 5, cv::Scalar(255,0,255), -1);
-		}
-	}
-	
-	imshow("Flow mask2", m_mask); 
-	imshow("Flow m_prevImg", m_prevImg); 
-	imshow("Flow m_nextImg", m_nextImg); 
-	m_prevPts = trackedPts;
-	m_nextImg.copyTo(m_prevImg);
-}
+// TODO: - skupina, ked sa dotykaju rukou tak pouzijem opening a zistim, ci tam nebude torso hraca 2x, 3x
+// TODO: - torso zistim extra eroziou, kde ruky a hlavu odstranim
+// TODO: - pomocou trajektorie hraca zistim, kolko hracov tam je
+// TODO: - lopta sa riesi druhym tokom, potom hladam cez hugh circle o urcitej velkosti a biele pozadie motion gradient
 

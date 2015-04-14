@@ -7,7 +7,7 @@
 /**
 * Metoda za pomoci ktorej sa spsuti program.
 */
-/*
+
 int main()
 {
 	// Nastav logy
@@ -23,4 +23,3 @@ int main()
 
 	return 0;
 }
-*/
