@@ -14,7 +14,7 @@ class Soccer : public App
 private:
 	// Atributy aplikacie
 	log4cpp::Category* log;
-	Size m_winSize;
+	static Size WIN_SIZE;
 	void commandArrive(string& str);
 
 	// Spracovanie videa
@@ -28,6 +28,7 @@ private:
 	Ptr<BackgroundSubtractor> m_pMOG2; //MOG2 Background subtractor
 	int m_mogLearnFrames;
 	bool m_learning;
+	void learningEnd();
 
 	// Determine objects
 	ObjectDetector* m_detector;

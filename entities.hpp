@@ -83,9 +83,11 @@ inline ostream& operator<< (ostream& out, DetectedObjectType& type) {
 
 class FrameObject {
 public:
+	static Size WIN_SIZE;
 	RotatedRect m_boundary;
 	vector<Point> m_countour;
 	DetectedObjectType type;
+	FrameObject* m_previous;
 
 	FrameObject(vector<Point> kontura, RotatedRect rec) {
 		m_countour = kontura;
@@ -112,5 +114,17 @@ public:
 		out << "type: " << object.type << ",";
 		out << ")";
 		return out;
+	}
+
+	vector<Point> getLocations() {
+		Mat binaryImage(WIN_SIZE.width, WIN_SIZE.height, CV_8UC1, Scalar(0, 0, 0));
+		vector<vector<Point> > contours;
+		contours.push_back(m_countour);
+		cv::drawContours(binaryImage, contours, 0, Scalar(255), -1);
+		std::vector<cv::Point> locations;
+		cv::findNonZero(binaryImage, locations);
+		//imshow("Tracer", binaryImage);
+		//cv::waitKey();
+		return locations;
 	}
 };

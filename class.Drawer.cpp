@@ -6,7 +6,7 @@ Drawer::Drawer() {
 	m_roiDraw = false;
 	m_debugDraw = false;
 	m_teamColoring = false;
-	m_drawType = 0;
+	m_drawType = 1;
 	m_roi = new ThresholdColor(Scalar(35, 72, 50), Scalar(51, 142, 144));
 	m_roi->createTrackBars("roiMask");
 
@@ -111,7 +111,6 @@ void Drawer::drawROI(Mat& image, Mat& mask, vector<FrameObject*>& objs) {
 	// Find ROI or select main image
 	Mat ROI;
 	UINT size = objs.size();
-	Size winSize = Size(640, 480);
 	if(size > 0) {
 		Mat combinedImageMask;
 		image.copyTo(combinedImageMask, mask); 
@@ -129,6 +128,6 @@ void Drawer::drawROI(Mat& image, Mat& mask, vector<FrameObject*>& objs) {
 	} else {
 		ROI = Mat(image);
 	}
-	resize(ROI, ROI, winSize);
+	resize(ROI, ROI, WIN_SIZE);
 	imshow("Vybrana sekcia", ROI);
 }

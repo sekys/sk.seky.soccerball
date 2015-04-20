@@ -286,12 +286,12 @@ bool isRelativeIntersection(vector<Point>& contour, Rect& rec, const float& volu
 	return (podobnost > ((int) contour.size() * volume));
 }
 
-void createWindows(const char* windows[]) {
+void createWindows(const char* windows[], Size size) {
 	const size_t len = sizeof(windows) / sizeof(windows[0]);
 	for (size_t i = 0; i < len; ++i) {
 		const char* meno = windows[i];
 		namedWindow(meno);
-		resizeWindow(meno, 640, 480);
+		resizeWindow(meno, size.width, size.height);
 		moveWindow(meno, 0, 0);
 	}
 }
@@ -303,7 +303,7 @@ void drawPoints(Mat&image, vector<Point>& points, Scalar color) {
 }
 
 void drawPoints(Mat&image, vector<Point2f>& points, Scalar color) {
-	vector<vector<Point> > contours;
-	contours.push_back(points);
-	drawContours(image, contours, 0, color);
+	vector<Point> dst;
+	Mat(points).copyTo(dst);
+	drawPoints(image, dst, color);
 }

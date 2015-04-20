@@ -5,6 +5,7 @@
 #include "entities.hpp"
 #include "class.ThresholdColor.hpp"
 #include "util.h"
+#include "log4cpp.h"
 
 using namespace cv;
 using namespace std;
@@ -12,22 +13,35 @@ using namespace std;
 
 class ObjectTracer {
 private:	
+	log4cpp::Category* log;
+
 	static bool m_sendingPoint;
-	static Point2f m_point;
-    int TRACE_PIXELS;
-	FrameObject* m_tracing;
-	vector<Point2f> m_points[2];
+	static Point m_point;
+	float LOST_OBJECT_PERCENT;
+	float EQUALS_OBJECT_PERCENT;
+
+	class TraceTrack {
+	public:
+		vector<Point2f> points[2];
+		FrameObject* tracing;
+	};
+
+	vector<TraceTrack*> m_footprints;
 	Mat m_gray, m_prevGray;
 
 	void chooseObject(vector<FrameObject*>& objs);
 	void init();
 	void startTrace(FrameObject* obj);
-
+	void traceObjects(Mat& image, vector<FrameObject*>& objs);
+	vector<Point> mapPixels(vector<Point2f>& in, vector<Point2f>& out); // return lost points
+	void lostTracing(TraceTrack* obj);
+	void compareObjects(TraceTrack* obj, vector<FrameObject*>& objs);
 
 public:
 	ObjectTracer() {
-		m_tracing = NULL;
-		TRACE_PIXELS = 100; 
+		log = CREATE_LOG4CPP();
+		LOST_OBJECT_PERCENT = 0.3; 
+		EQUALS_OBJECT_PERCENT = 0.7;
 		init();		
 	}
 

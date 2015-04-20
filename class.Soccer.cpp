@@ -97,8 +97,7 @@ void Soccer::loadNextFrame() {
 
 void Soccer::processFrame(Frame* in) {
 	// Predspracuj vstup podla potreby, vypocitaj fgMasku
-	Size velkostVstupu = m_winSize; //Size(1920, 1080);
-	resize(m_actual->data, m_actual->data, velkostVstupu);
+	resize(m_actual->data, m_actual->data, WIN_SIZE);
 
 	// Learning MOG algorithm
 	if(m_learning) {
@@ -109,10 +108,7 @@ void Soccer::processFrame(Frame* in) {
 		}
 
 		if(in->pos_msec == m_mogLearnFrames) {
-			m_record->doReset();
-			m_learning = false;
-			log->debugStream() << "Koniec ucenia.";
-			log->debugStream() << "Restartujem stream.";
+			learningEnd();
 			return;
 		}
 		return;
@@ -124,6 +120,17 @@ void Soccer::processFrame(Frame* in) {
 	}
 
 	processImage(m_actual->data.clone());
+}
+
+void Soccer::learningEnd() {
+	log->debugStream() << "Restartujem stream.";
+	m_record->doReset();
+	m_learning = false;
+	log->debugStream() << "Koniec ucenia.";
+
+	m_detector = new ObjectDetector();
+	m_drawer = new Drawer();
+	m_tracer = new ObjectTracer();
 }
 
 void Soccer::processImage(Mat& input) {
@@ -151,7 +158,6 @@ void Soccer::processImage(Mat& input) {
 	// Najdi objekty
 	vector<FrameObject*> objects;
 	m_detector->findObjects(input, finalMask, objects);
-	Mat out;
 	m_tracer->process(input, objects);
 	m_drawer->draw(input, finalMask, objects);
 }
@@ -161,25 +167,25 @@ void Soccer::Init() {
 	m_record = new VideoRecord("data/filmrole5.avi");
 	m_pMOG2 = new BackgroundSubtractorMOG2(200, 16.0, false);
 	m_grass = new ThresholdColor(Scalar(35, 72, 50), Scalar(51, 142, 144));
-	m_detector = new ObjectDetector();
-	m_drawer = new Drawer();
 	m_learning = true;
 	m_mogLearnFrames = 200;
-	m_winSize = Size(640, 480); 
 	m_pause = false;
 	m_actual = NULL;
-	m_tracer = new ObjectTracer();
 
 	const char* windows[] = { 
 		//"mogMask", 
 		//"grassMask",
-		"Color mask", 
-		"Roi", 
+		//"Color mask", 
+		//"Roi", 
 		"Vystup" 
 	};
 	//createWindows(windows);
 	m_grass->createTrackBars("grassMask");
 }
+
+Size FrameObject::WIN_SIZE = Size(640, 480);  //Size(1920, 1080);
+Size Soccer::WIN_SIZE = Size(640, 480); 
+Size Drawer::WIN_SIZE = Size(640, 480); 
 
 // TODO: - skupina, ked sa dotykaju rukou tak pouzijem opening a zistim, ci tam nebude torso hraca 2x, 3x
 // TODO: - torso zistim extra eroziou, kde ruky a hlavu odstranim

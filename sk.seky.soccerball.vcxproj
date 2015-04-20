@@ -69,8 +69,8 @@
     <ClCompile Include="class.App.cpp" />
     <ClCompile Include="class.Drawer.cpp" />
     <ClCompile Include="class.ObjectDetector.cpp" />
+    <ClCompile Include="class.ObjectTracer.cpp" />
     <ClCompile Include="class.Soccer.cpp" />
-    <ClCompile Include="lkdemo.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
@@ -78,6 +78,7 @@
     <ClInclude Include="class.App.hpp" />
     <ClInclude Include="class.Drawer.hpp" />
     <ClInclude Include="class.ObjectDetector.hpp" />
+    <ClInclude Include="class.ObjectTracer.hpp" />
     <ClInclude Include="class.Soccer.hpp" />
     <ClInclude Include="class.ThresholdColor.hpp" />
     <ClInclude Include="class.Time.hpp" />

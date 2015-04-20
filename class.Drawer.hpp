@@ -11,6 +11,7 @@ using namespace std;
 
 class Drawer {
 private:
+	static Size WIN_SIZE;
 	log4cpp::Category* log;
 	ThresholdColor* m_roi;
 	int m_roi_index;

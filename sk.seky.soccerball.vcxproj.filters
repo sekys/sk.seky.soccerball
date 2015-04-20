@@ -33,7 +33,7 @@
     <ClCompile Include="class.Drawer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lkdemo.cpp">
+    <ClCompile Include="class.ObjectTracer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -66,6 +66,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="class.Drawer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="class.ObjectTracer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
