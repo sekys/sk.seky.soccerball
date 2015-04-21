@@ -19,7 +19,6 @@ Soccer::~Soccer() {
 	SAFE_DELETE(m_grass);
 	SAFE_RELEASE(m_actual);
 	SAFE_DELETE(m_tracer);
-	//m_realObjects.clear();
 	if(log != NULL) log->debug("Ending Soccer");
 }
 
@@ -115,7 +114,7 @@ void Soccer::processFrame(Frame* in) {
 	} 
 	
 	// Pauza pre konkretny snimok
-	if(in->pos_msec == 490) {
+	if(in->pos_msec == 490 || in->pos_msec == 355) {
 		m_pause = true;
 	}
 
@@ -152,8 +151,6 @@ void Soccer::processImage(Mat& input) {
 	Mat finalMask;
 	bitwise_and(grassMask, mogMask, finalMask);
 	//imshow("finalMask", finalMask); 
-	//opticalFlow(oper, oper);
-	//imshow("oper2", oper); 
 	
 	// Najdi objekty
 	vector<FrameObject*> objects;

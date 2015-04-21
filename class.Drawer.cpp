@@ -24,7 +24,7 @@ void Drawer::switchTeamColoring() {
 	log->debugStream() << "m_teamColoring " << m_teamColoring;
 }
 void Drawer::switchDrawType() {
-	m_drawType = (m_drawType + 1) % 3; 
+	m_drawType = (m_drawType + 1) % 4; 
 	log->debugStream() << "m_drawType " << m_drawType;
 }
 void Drawer::switchDebugDraw() {
@@ -61,6 +61,10 @@ void Drawer::draw(Mat& image, Mat& mask, vector<FrameObject*>& objs) {
 			ostringstream os;
 			os << obj->type;
 			putText(image, os.str(), obj->m_boundary.center, 0, 0.2, color, 1, 8);
+		} else if(m_drawType == 3) {
+			ostringstream os;
+			os << obj->distanceCovered();
+			putText(image, os.str(), obj->m_boundary.center, 0, 0.8, Scalar(255, 255, 255), 1, 8);
 		} else if(m_drawType == 1) {
 			drawPoints(image, objs.at(i)->m_countour, color);
 		}

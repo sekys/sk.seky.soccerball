@@ -34,7 +34,6 @@ private:
 	ObjectDetector* m_detector;
 	Drawer* m_drawer;
 	void processImage(Mat& input);
-	//vector<FrameObject> m_realObjects;
 	ThresholdColor* m_grass;
 
 	ObjectTracer* m_tracer;

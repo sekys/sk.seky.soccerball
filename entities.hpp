@@ -2,6 +2,7 @@
 #include <opencv2/core/core.hpp>
 #include "opencv2/opencv.hpp"
 #include <queue> 
+#include "util.h"
 
 #define SAFE_DELETE(a) if( (a) != NULL ) delete (a); (a) = NULL;
 #define SAFE_RELEASE(p) if ( (p) != NULL  ) (p)->release(); (p) = NULL;
@@ -9,9 +10,6 @@
 using namespace cv;
 using namespace std;
 
-/*
-* Opencv examples
-*/
 inline ostream& operator<< (ostream& out, Point2f& object) {
 	out << "Point2f(x:" << object.x << ", y:" << object.y << ")";
 	return out;
@@ -93,6 +91,11 @@ public:
 		m_countour = kontura;
 		m_boundary = rec;
 		type = DetectedObjectType::UNKNOWN;
+		m_previous = NULL;
+	}
+
+	bool hasHistory() {
+		return m_previous != NULL;
 	}
 
 	Mat getROI(Mat& image) {
@@ -109,6 +112,11 @@ public:
 		return m_countour.size();
 	}
 
+	double distanceCovered() {
+		if(!hasHistory()) return 0;
+		return euclideanDist(m_boundary.center, m_previous->m_boundary.center);
+	}
+
 	friend ostream& operator<< (ostream& out, FrameObject& object) {
 		out << "FrameObject(";
 		out << "type: " << object.type << ",";
@@ -122,7 +130,10 @@ public:
 		contours.push_back(m_countour);
 		cv::drawContours(binaryImage, contours, 0, Scalar(255), -1);
 		std::vector<cv::Point> locations;
-		cv::findNonZero(binaryImage, locations);
+		int n = countNonZero(binaryImage);
+		if(n > 0) { // bugfix https://github.com/Itseez/opencv/pull/3004
+			cv::findNonZero(binaryImage, locations);
+		}
 		//imshow("Tracer", binaryImage);
 		//cv::waitKey();
 		return locations;

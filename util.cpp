@@ -281,6 +281,29 @@ int intersectionPoints(vector<Point>& contour, Rect& rec) {
 	return pocet;
 }
 
+bool comparePoint2f(Point2f& a, Point2f& b) {	
+	return ( ((int)a.x) == ((int)b.x) && ((int)a.y) == ((int)b.y));
+}
+
+bool containsPixel(vector<Point2f>& a, Point2f& b) {	
+	for(int i=0; i < a.size(); i++) {
+		if(comparePoint2f(a.at(i), b)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int intersection(vector<Point2f>& a, vector<Point2f>&b) {
+	int pocet = 0;
+	for(int i=0; i < a.size(); i++) {
+		if( containsPixel(b, a.at(i)) ) {
+			pocet++;
+		}
+	}
+	return pocet;
+}
+
 bool isRelativeIntersection(vector<Point>& contour, Rect& rec, const float& volume) {
 	int podobnost = intersectionPoints(contour, rec);
 	return (podobnost > ((int) contour.size() * volume));
@@ -306,4 +329,8 @@ void drawPoints(Mat&image, vector<Point2f>& points, Scalar color) {
 	vector<Point> dst;
 	Mat(points).copyTo(dst);
 	drawPoints(image, dst, color);
+}
+double euclideanDist(Point p, Point q) {
+    Point diff = p - q;
+    return cv::sqrt(diff.x*diff.x + diff.y*diff.y);
 }

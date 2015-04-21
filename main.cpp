@@ -11,7 +11,6 @@
 int main()
 {
 	// Nastav logy
-	// ShowWindow( GetConsoleWindow(), SW_HIDE );
 	std::string initFileName = "data/log4cpp.properties";
 	log4cpp::PropertyConfigurator::configure(initFileName);
 	log4cpp::Category::getRoot().debug("Starting log4cpp, configuration %s", initFileName.c_str());

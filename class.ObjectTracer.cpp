@@ -24,14 +24,32 @@ void ObjectTracer::process(Mat& image, vector<FrameObject*>& objs) {
 		m_gray.copyTo(m_prevGray);
 	}
 
-	// Vyber novy objekt ak je to potrebne
-	if(m_sendingPoint) {
-		chooseObject(objs);
-	}	
 	traceObjects(image, objs);
+	checkNewObjects(objs);
 	swap(m_prevGray, m_gray);
 }
 
+void ObjectTracer::checkNewObjects(vector<FrameObject*>& objs) {
+	// Vyber novy objekt ak je to potrebne
+	for ( auto it = objs.begin(); it != objs.end(); ++it ) {
+		FrameObject* obj = (*it);
+		if(obj->hasHistory() || !canTrace(obj)) {
+			continue; // trackujeme len urcite objekty
+		}
+
+		if(m_sendingPoint) {
+			m_sendingPoint = false;
+			double result = pointPolygonTest( (*it)->m_countour, m_point, false);
+			if(result > 0.0) {
+				// Pouzivatel si vybral prave tuto konturu
+				startTrace((*it));
+				break;
+			}
+		}
+		//startTrace(obj);
+	}
+
+}
 
 vector<Point> ObjectTracer::mapPixels(vector<Point2f>& in, vector<Point2f>& out) {
 	vector<uchar> status;
@@ -52,17 +70,17 @@ vector<Point> ObjectTracer::mapPixels(vector<Point2f>& in, vector<Point2f>& out)
 
 void ObjectTracer::traceObjects(Mat& image, vector<FrameObject*>& objs) {
 	for (int i=0; i < m_footprints.size(); i++) { 
-		TraceTrack* trace = m_footprints.at(i);
+		TraceTrack* track = m_footprints.at(i);
 
 		// Trakuj  zvoleny objekt
-		if( !trace->points[0].empty() ) {
-			int pixelovNaVstupe = trace->points[0].size();
-			vector<Point> lostPoints = mapPixels(trace->points[0], trace->points[1]);
+		if( !track->points[0].empty() ) {
+			int pixelovNaVstupe = track->points[0].size();
+			vector<Point> lostPoints = mapPixels(track->points[0], track->points[1]);
 
 			// Ked stratim vacsinu pixelov, nerobim nic, napisem error
 			if(((int) (pixelovNaVstupe * LOST_OBJECT_PERCENT)) < lostPoints.size()) {
 				m_footprints.erase(m_footprints.begin() + i);
-				lostTracing(trace); 
+				lostTracing(track); 
 				i--;
 				continue;
 			}
@@ -70,26 +88,34 @@ void ObjectTracer::traceObjects(Mat& image, vector<FrameObject*>& objs) {
 			// Vykreslujeme body roznou farbou pre debug pohlad
 			Mat debugImage;
 			image.copyTo(debugImage);
-			drawPoints(debugImage, trace->points[0], Scalar(255, 0, 0)); //bgr
-			drawPoints(debugImage, trace->points[1], Scalar(0, 255, 0));
+			drawPoints(debugImage, track->points[0], Scalar(255, 0, 0)); //bgr
+			drawPoints(debugImage, track->points[1], Scalar(0, 255, 0));
 			drawPoints(debugImage, lostPoints, Scalar(0, 0, 255));
-			imshow("Tracer", debugImage);
+			imshow("tracker", debugImage);
 			//cv::waitKey();
-
-			compareObjects(trace, objs);
+			compareObjects(track, objs);
 		}
 	}
 }
 
-void ObjectTracer::compareObjects(TraceTrack* trace, vector<FrameObject*>& objs) {
+void ObjectTracer::compareObjects(TraceTrack* track, vector<FrameObject*>& objs) {
+	vector<Point2f> points;
+	for (int i=0; i < objs.size(); i++) { 
+		FrameObject* obj = objs.at(i);
+		if(!canTrace(obj)) {
+			continue;
+		}
+		Mat(obj->getLocations()).copyTo(points); 
+		int pocet = intersection(track->points[1], points);
+		int namapovanychBodov = track->points[1].size();
+		if((namapovanychBodov * EQUALS_OBJECT_PERCENT) < pocet) {
+			obj->m_previous = track->tracing;
+			track->points[1] = points;
+			break; // EQUALS_OBJECT_PERCENT sanca nam staci na potvrdenie objektu
+		}
+	}
 
-	// TODO: Teraz tu zistit, ze stare body sedia z ktorym objektom novym .. ma najviac spolocnych bodov
-	// Mozem vyberat ludi alebo aj zvysne objekty .... tie zvysne sa casom mozu stat typu ludia, podla historie
-	// casom = Ked dane body sedia viac ako 10 snimkov za sebou, som si isty, ze ten objekt je clovek, je v pohybe
-	// Potom tieto body nahradit novymi z daneho objektu
-	// Ukladat historiu pohybu objektu
-
-	swap(trace->points[1], trace->points[0]); // ked sa rozhodnem nove body nepriradit, musim aspon vymenit vyustp za novy vstup
+	swap(track->points[1], track->points[0]); // ked sa rozhodnem nove body nepriradit, musim stale vymenit vystup za novy vstup
 }
 
 void ObjectTracer::lostTracing(TraceTrack* obj) {
@@ -99,38 +125,24 @@ void ObjectTracer::lostTracing(TraceTrack* obj) {
 	SAFE_DELETE(obj);
 }
 
-void ObjectTracer::chooseObject(vector<FrameObject*>& objs) {
-	m_sendingPoint = false;
-
-	for ( auto it = objs.begin(); it != objs.end(); ++it ) {
-		FrameObject* obj = (*it);
-		if( !(
+bool ObjectTracer::canTrace(FrameObject* obj) {
+	return (
 			obj->type == GOAL_KEEPER_A 
 			|| obj->type == GOAL_KEEPER_B
 			|| obj->type == PLAYER_A
 			|| obj->type == PLAYER_B
 			|| obj->type == REFEREE
-		)) {
-			continue; // trackujeme len urcite objekty
-		}
-
-		double result = pointPolygonTest( (*it)->m_countour, m_point, false);
-		if(result > 0.0) {
-			// Pouzivatel si vybral prave tuto konturu
-			startTrace((*it));
-			break;
-		}
-	}
+		); // trackujeme len urcite objekty
 }
 
 void ObjectTracer::startTrace(FrameObject* obj) {
 	vector<Point2f> points;
 	Mat(obj->getLocations()).copyTo(points);  
 
-	TraceTrack* trace = new TraceTrack();
-	trace->tracing = obj;
-	trace->points[0] = points;
-	m_footprints.push_back(trace);
+	TraceTrack* track = new TraceTrack();
+	track->tracing = obj;
+	track->points[0] = points;
+	m_footprints.push_back(track);
 	/*
 	Mat debugImage(image.cols, image.rows, CV_8UC1, Scalar(0, 0, 0));
 	drawPoints(debugImage, m_points[1], Scalar(255));
