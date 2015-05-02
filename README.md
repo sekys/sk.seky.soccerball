@@ -6,7 +6,7 @@ Lukas Sekerak's school project in Computer vision .
 
 Try detect objects (players, soccer ball, referees, goal keeper) in soccer match.
 Detect their position, movement and show picked object in ROI area.
-More info in (presentation)[presentation.pptx].
+More inforamtions in a [documentation](doc/documentation.pptx) or [presentation](doc/presentation.pptx).
 
 ## Requirements
 
@@ -31,7 +31,7 @@ in the Proceeding of the 6th IEEE International Conference on Advanced Video and
 - W - turn on/off ROI area
 - Q,E - switch between detected ROI
 - S - pause of processing frames
-- F - turn on/off debug draw
+- F - switch draw method
 
 ## License
 
