@@ -6,7 +6,7 @@ Lukas Sekerak's school project in Computer vision .
 
 Try detect objects (players, soccer ball, referees, goal keeper) in soccer match.
 Detect their position, movement and show picked object in ROI area.
-More inforamtions in a [documentation](doc/documentation.pptx) or [presentation](doc/presentation.pptx).
+More inforamtions in a [documentation](doc/documentation.pdf) or [presentation](doc/presentation.pptx).
 
 ## Requirements
 
