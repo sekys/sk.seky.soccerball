@@ -2,6 +2,7 @@
 #include <opencv2/core/core.hpp>
 #include "opencv2/opencv.hpp"
 #include <queue> 
+#include <cmath>
 #include "util.h"
 
 #define SAFE_DELETE(a) if( (a) != NULL ) delete (a); (a) = NULL;
@@ -113,8 +114,14 @@ public:
 	}
 
 	double distanceCovered() {
+		if(!hasHistory()) return 0.0;
+		double actual = euclideanDist(m_boundary.center, m_previous->m_boundary.center);
+		return m_previous->distanceCovered() + actual;
+	}
+
+	int countHistory() {
 		if(!hasHistory()) return 0;
-		return euclideanDist(m_boundary.center, m_previous->m_boundary.center);
+		return 1 + m_previous->countHistory();
 	}
 
 	friend ostream& operator<< (ostream& out, FrameObject& object) {

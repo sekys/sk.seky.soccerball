@@ -110,6 +110,7 @@ void ObjectTracer::compareObjects(TraceTrack* track, vector<FrameObject*>& objs)
 		int namapovanychBodov = track->points[1].size();
 		if((namapovanychBodov * EQUALS_OBJECT_PERCENT) < pocet) {
 			obj->m_previous = track->tracing;
+			track->tracing = obj;
 			track->points[1] = points;
 			break; // EQUALS_OBJECT_PERCENT sanca nam staci na potvrdenie objektu
 		}
@@ -143,6 +144,9 @@ void ObjectTracer::startTrace(FrameObject* obj) {
 	track->tracing = obj;
 	track->points[0] = points;
 	m_footprints.push_back(track);
+	if(log != NULL) {
+		log->debug("Zacinam trakovat.");
+	}
 	/*
 	Mat debugImage(image.cols, image.rows, CV_8UC1, Scalar(0, 0, 0));
 	drawPoints(debugImage, m_points[1], Scalar(255));

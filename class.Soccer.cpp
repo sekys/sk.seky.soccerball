@@ -114,7 +114,7 @@ void Soccer::processFrame(Frame* in) {
 	} 
 	
 	// Pauza pre konkretny snimok
-	if(in->pos_msec == 490 || in->pos_msec == 355) {
+	if(in->pos_msec == 355) {
 		m_pause = true;
 	}
 
